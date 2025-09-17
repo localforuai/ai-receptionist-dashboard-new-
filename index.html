@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-key="appName">AI Receptionist</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            background-color: #f0f2f5;
+        }
+        .app-container {
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: #f0f2f5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .main-content {
+            flex-grow: 1;
+            padding: 1rem;
+            padding-bottom: 5rem;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 500px;
+            background-color: #fff;
+            border-top: 1px solid #e5e7eb;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-around;
+            padding: 0.5rem 0;
+            z-index: 50;
+        }
+        .nav-button {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0.5rem;
+            color: #9ca3af;
+            transition: color 0.2s ease;
+        }
+        .nav-button.active {
+            color: #4a5cff;
+        }
+        .nav-button.active svg {
+            fill: #4a5cff;
+        }
+        .nav-button span {
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+        .card {
+            background-color: #fff;
+            padding: 1.25rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+        }
+        .scrollable-container::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollable-container {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .pull-to-refresh-indicator {
+            height: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1rem;
+            color: #9ca3af;
+            transition: height 0.3s ease;
+        }
+        .btn-primary {
+            @apply px-5 py-3 rounded-xl font-semibold shadow-md transition-all duration-300;
+        }
+        .btn-green {
+            @apply btn-primary bg-green-500 text-white hover:bg-green-600;
+        }
+        .btn-red {
+            @apply btn-primary bg-red-500 text-white hover:bg-red-600;
+        }
+        .btn-blue {
+            @apply btn-primary bg-blue-500 text-white hover:bg-blue-600;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="bg-white p-4 border-b border-gray-200 shadow-sm flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                    AI
+                </div>
+                <div>
+                    <h1 class="text-xl font-semibold text-gray-800" data-key="appName">AI Receptionist</h1>
+                    <p class="text-sm text-gray-500">demo@shop.com</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Pull-to-refresh Indicator (initially hidden) -->
+        <div id="pull-to-refresh-indicator" class="pull-to-refresh-indicator">
+            Refreshing...
+        </div>
+
+        <!-- Main Content Area -->
+        <main id="main-content" class="main-content">
+            <!-- Content will be injected here by JavaScript -->
+        </main>
+
+        <!-- Bottom Navigation Bar -->
+        <nav class="bottom-nav">
+            <button class="nav-button" data-page="call-history">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.25a2 2 0 012 2v2.5a2 2 0 01-2 2H5a2 2 0 01-2-2V5zM3 13a2 2 0 012-2h3.25a2 2 0 012 2v2.5a2 2 0 01-2 2H5a2 2 0 01-2-2v-2.5zM15 5a2 2 0 012-2h3.25a2 2 0 012 2v2.5a2 2 0 01-2 2h-3.25a2 2 0 01-2-2V5zM15 13a2 2 0 012-2h3.25a2 2 0 012 2v2.5a2 2 0 01-2 2h-3.25a2 2 0 01-2-2v-2.5z" />
+                </svg>
+                <span data-key="callHistory">Call History</span>
+            </button>
+            <button class="nav-button" data-page="todo-actions">
+                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2m-2 4l-3 3m0 0l-3-3m3 3V2m9 9v1m0 0v1m0 0v1" />
+                </svg>
+                <span data-key="toDo">To Do</span>
+            </button>
+            <button class="nav-button active" data-page="overview">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2L3 9v11a2 2 0 002 2h14a2 2 0 002-2V9l-9-7zm0 18a1 1 0 01-1-1v-6a1 1 0 012 0v6a1 1 0 01-1 1z" />
+                </svg>
+                <span data-key="overview">Overview</span>
+            </button>
+            <button class="nav-button" data-page="bookings">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span data-key="bookings">Bookings</span>
+            </button>
+            <button class="nav-button" data-page="settings">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-.884 1.76-.884 2.186 0l.965 2.016a1 1 0 00.957.568l2.256.327a1 1 0 01.554 1.7L17.51 11a1 1 0 00-.288.756v1.492a1 1 0 00.288.756l1.57 1.252a1 1 0 01-.555 1.7l-2.255.327a1 1 0 00-.957.568l-.965 2.016c-.426.884-1.76.884-2.186 0l-.965-2.016a1 1 0 00-.957-.568l-2.256-.327a1 1 0 01-.554-1.7L6.49 13a1 1 0 00.288-.756v-1.492a1 1 0 00-.288-.756L4.85 8.71a1 1 0 01.554-1.7l2.256-.327a1 1 0 00.957-.568l.965-2.016z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
+                </svg>
+                <span data-key="settings">Settings</span>
+            </button>
+        </nav>
+    </div>
+
+    <script>
+        const app = {
+            translations: {
+                en: {
+                    appName: "AI Receptionist",
+                    callHistory: "Call History",
+                    toDo: "To Do",
+                    overview: "Overview",
+                    bookings: "Bookings",
+                    settings: "Settings",
+                    runningLow: "Running low on minutes!",
+                    zeroMinutes: "You have 0 minutes remaining. Consider purchasing more minutes to avoid service interruption.",
+                    buyMinutes: "Buy 100 minutes",
+                    dateRange: "Date Range",
+                    thisWeek: "This Week",
+                    today: "Today",
+                    thisMonth: "This Month",
+                    customRange: "Custom Range",
+                    totalCalls: "Total Calls",
+                    totalCallMinutes: "Total Call Minutes",
+                    successRate: "Success Rate",
+                    avgCallDuration: "Avg Call Duration",
+                    callHistoryTitle: "Call History",
+                    callDetailsTitle: "Call Details",
+                    summary: "Summary:",
+                    callRecording: "Call Recording:",
+                    close: "Close",
+                    todoActionsTitle: "To Do Actions",
+                    bookingsTitle: "Bookings",
+                    openGoogleCalendar: "Open Google Calendar",
+                    todaysBookings: "Today's Bookings",
+                    thisWeeksBookings: "This Week's Bookings",
+                    language: "Language",
+                    gcalIntegration: "Google Calendar Integration",
+                    status: "Status:",
+                    notConnected: "Not connected",
+                    connect: "Connect",
+                    connected: "Connected",
+                    connectionFailed: "Connection Failed",
+                    subscription: "Subscription",
+                    professionalPlan: "Professional Plan",
+                    remaining: "Remaining",
+                    autoTopUp: "Auto Top-Up",
+                    needMore: "Need More?",
+                    oneTimePurchase: "One-time purchase",
+                    buyMoreMinutes: "Buy More Minutes",
+                    stripeIntegration: "Stripe Integration",
+                    logOut: "Log Out",
+                    appointments: "appointments",
+                    releaseToRefresh: "Release to refresh",
+                    pullToRefresh: "Pull to refresh",
+                    refreshing: "Refreshing...",
+                },
+                th: {
+                    appName: "AI Receptionist",
+                    callHistory: "ประวัติการโทร",
+                    toDo: "สิ่งที่ต้องทำ",
+                    overview: "ภาพรวม",
+                    bookings: "การจอง",
+                    settings: "ตั้งค่า",
+                    runningLow: "นาทีคงเหลือน้อย!",
+                    zeroMinutes: "คุณเหลือ 0 นาที โปรดซื้อนาทีเพิ่มเติมเพื่อหลีกเลี่ยงบริการหยุดชะงัก",
+                    buyMinutes: "ซื้อ 100 นาที",
+                    dateRange: "ช่วงวันที่",
+                    thisWeek: "สัปดาห์นี้",
+                    today: "วันนี้",
+                    thisMonth: "เดือนนี้",
+                    customRange: "กำหนดเอง",
+                    totalCalls: "จำนวนสาย",
+                    totalCallMinutes: "นาทีการโทร",
+                    successRate: "อัตราสำเร็จ",
+                    avgCallDuration: "ระยะเวลาเฉลี่ย",
+                    callHistoryTitle: "ประวัติการโทร",
+                    callDetailsTitle: "รายละเอียดการโทร",
+                    summary: "สรุป:",
+                    callRecording: "บันทึกเสียง:",
+                    close: "ปิด",
+                    todoActionsTitle: "สิ่งที่ต้องทำ",
+                    bookingsTitle: "การจอง",
+                    openGoogleCalendar: "เปิด Google Calendar",
+                    todaysBookings: "การจองวันนี้",
+                    thisWeeksBookings: "การจองสัปดาห์นี้",
+                    language: "ภาษา",
+                    gcalIntegration: "การเชื่อมต่อ Google Calendar",
+                    status: "สถานะ:",
+                    notConnected: "ยังไม่ได้เชื่อมต่อ",
+                    connect: "เชื่อมต่อ",
+                    connected: "เชื่อมต่อแล้ว",
+                    connectionFailed: "เชื่อมต่อไม่สำเร็จ",
+                    subscription: "การสมัครสมาชิก",
+                    professionalPlan: "แพ็กเกจมืออาชีพ",
+                    remaining: "คงเหลือ",
+                    autoTopUp: "เติมอัตโนมัติ",
+                    needMore: "ต้องการเพิ่มเติม?",
+                    oneTimePurchase: "ซื้อครั้งเดียว",
+                    buyMoreMinutes: "ซื้อนาทีเพิ่มเติม",
+                    stripeIntegration: "การเชื่อมต่อ Stripe",
+                    logOut: "ออกจากระบบ",
+                    appointments: "นัด",
+                    releaseToRefresh: "ปล่อยเพื่อรีเฟรช",
+                    pullToRefresh: "ดึงเพื่อรีเฟรช",
+                    refreshing: "กำลังรีเฟรช...",
+                }
+            },
+            currentLang: 'th',
+            
+            vapi_private_key: '31ed7a3f-24c1-42e4-9dfc-59fd89292706',
+            vapi_public_key: 'fd0cdac6-c444-4950-adc9-8c4c0b6b2ad9',
+            
+            fetchVapiData: async function(endpoint) {
+                try {
+                    console.log(`Fetching data from Vapi API for endpoint: ${endpoint}`);
+                    const response = await fetch(`https://api.vapi.ai/v1/${endpoint}`, {
+                        headers: {
+                            'Authorization': `Bearer ${this.vapi_private_key}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    if (!response.ok) {
+                        throw new Error(`API call failed: ${response.statusText}`);
+                    }
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    console.error("Error fetching Vapi data:", error);
+                    return null;
+                }
+            },
+            
+            setLanguage: function(lang) {
+                this.currentLang = lang;
+                document.documentElement.lang = lang;
+                document.querySelectorAll('[data-key]').forEach(el => {
+                    const key = el.dataset.key;
+                    if (this.translations[lang] && this.translations[lang][key]) {
+                        el.textContent = this.translations[lang][key];
+                    }
+                });
+                this.renderPage(this.currentPage);
+            },
+            
+            pages: {
+                'overview': () => {
+                    const mockMetrics = [
+                        { labelKey: 'totalCalls', value: 147, change: '+8.2%', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.25a2 2 0 012 2v2.5a2 2 0 01-2 2H5a2 2 0 01-2-2V5zM3 13a2 2 0 012-2h3.25a2 2 0 012 2v2.5a2 2 0 01-2 2H5a2 2 0 01-2-2v-2.5zM15 5a2 2 0 012-2h3.25a2 2 0 012 2v2.5a2 2 0 01-2 2h-3.25a2 2 0 01-2-2V5zM15 13a2 2 0 012-2h3.25a2 2 0 012 2v2.5a2 2 0 01-2 2h-3.25a2 2 0 01-2-2v-2.5z" /></svg>`, bgColor: 'bg-blue-100', iconColor: 'text-blue-500' },
+                        { labelKey: 'totalCallMinutes', value: 818.9, change: '+12.5%', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`, bgColor: 'bg-green-100', iconColor: 'text-green-500' },
+                        { labelKey: 'successRate', value: '74%', change: '+5.4%', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`, bgColor: 'bg-purple-100', iconColor: 'text-purple-500' },
+                        { labelKey: 'avgCallDuration', value: '5:34', change: '-3.1%', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5.37a2 2 0 011.83-2.37h.34a2 2 0 011.83 2.37v13.26a2 2 0 01-1.83 2.37h-.34a2 2 0 01-1.83-2.37V5.37zm-5.83 2.36a2 2 0 011.83-2.37h.34a2 2 0 011.83 2.37v13.26a2 2 0 01-1.83 2.37h-.34a2 2 0 01-1.83-2.37V7.73zm11.66 0a2 2 0 011.83-2.37h.34a2 2 0 011.83 2.37v13.26a2 2 0 01-1.83 2.37h-.34a2 2 0 01-1.83-2.37V7.73z" /></svg>`, bgColor: 'bg-orange-100', iconColor: 'text-orange-500' },
+                    ];
+                    const t = app.translations[app.currentLang];
+                    return `
+                        <div class="space-y-6">
+                            <!-- Running Low on Minutes Alert -->
+                            <div class="bg-yellow-500 text-white p-4 rounded-xl flex justify-between items-start shadow-md">
+                                <div class="flex items-start space-x-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mt-1" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 2.25a.75.75 0 00-1.5 0v6a.75.75 0 001.5 0V2.25zM12.75 14a.75.75 0 10-1.5 0 .75.75 0 001.5 0zM12 21.75a.75.75 0 00-1.5 0v-2a.75.75 0 001.5 0v2z" />
+                                        <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25z" clip-rule="evenodd" />
+                                    </svg>
+                                    <div>
+                                        <p class="font-semibold" data-key="runningLow">${t.runningLow}</p>
+                                        <p class="text-sm" data-key="zeroMinutes">${t.zeroMinutes}</p>
+                                    </div>
+                                </div>
+                                <button class="text-white opacity-70 hover:opacity-100">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                            </div>
+                            <button class="w-full px-4 py-3 bg-white text-yellow-500 rounded-xl font-semibold shadow-md border-2 border-yellow-500" data-key="buyMinutes">${t.buyMinutes}</button>
+
+                            <!-- Date Range Selector -->
+                            <div class="flex items-center justify-between">
+                                <h2 class="text-lg font-semibold text-gray-800" data-key="overview">${t.overview}</h2>
+                                <select class="p-2 border border-gray-300 rounded-lg text-sm bg-white">
+                                    <option data-key="thisWeek">${t.thisWeek}</option>
+                                    <option data-key="today">${t.today}</option>
+                                    <option data-key="thisMonth">${t.thisMonth}</option>
+                                    <option data-key="customRange">${t.customRange}</option>
+                                </select>
+                            </div>
+
+                            <!-- Metrics Cards - Full View -->
+                            <div class="grid grid-cols-2 gap-4">
+                                ${mockMetrics.map(metric => `
+                                    <div class="card ${metric.bgColor} shadow-md rounded-xl p-4">
+                                        <div class="flex items-center justify-between">
+                                            <div class="w-12 h-12 flex items-center justify-center rounded-full ${metric.bgColor}">
+                                                <div class="w-8 h-8 ${metric.iconColor}">${metric.icon}</div>
+                                            </div>
+                                            <span class="text-xs font-semibold ${parseFloat(metric.change) >= 0 ? 'text-green-500' : 'text-red-500'}">${metric.change}</span>
+                                        </div>
+                                        <div class="mt-4">
+                                            <div class="text-2xl font-bold text-gray-800">${metric.value}</div>
+                                            <span class="text-sm font-medium text-gray-500" data-key="${metric.labelKey}">${t[metric.labelKey]}</span>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                },
+                'call-history': () => {
+                    const mockCallLogs = [
+                        { id: 1, phone: '+19877306999', assistant: 'Emily (Evening)', date: 'Sep 17, 12:23 PM', duration: '8:45', success: '75%', details_en: 'This is a mock call summary for call 1. The call was successful.', details_th: 'นี่คือสรุปการโทรสำหรับสายที่ 1 การโทรสำเร็จ', audioUrl: 'https://example.com/audio/call_1.mp3' },
+                        { id: 2, phone: '+16827785142', assistant: 'Emily (Evening)', date: 'Sep 16, 11:53 PM', duration: '10:11', success: '68%', details_en: 'This is a mock call summary for call 2. The call was successful.', details_th: 'นี่คือสรุปการโทรสำหรับสายที่ 2 การโทรสำเร็จ', audioUrl: 'https://example.com/audio/call_2.mp3' },
+                        { id: 3, phone: '+12133994980', assistant: 'Sarah (Main)', date: 'Sep 16, 8:01 PM', duration: '8:57', success: '76%', details_en: 'This is a mock call summary for call 3. The call was successful.', details_th: 'นี่คือสรุปการโทรสำหรับสายที่ 3 การโทรสำเร็จ', audioUrl: 'https://example.com/audio/call_3.mp3' },
+                        { id: 4, phone: '+15402581012', assistant: 'Emily (Evening)', date: 'Sep 16, 4:44 PM', duration: '7:46', success: '88%', details_en: 'This is a mock call summary for call 4. The call was successful.', details_th: 'นี่คือสรุปการโทรสำหรับสายที่ 4 การโทรสำเร็จ', audioUrl: 'https://example.com/audio/call_4.mp3' },
+                        { id: 5, phone: '+15113345614', assistant: 'Emily (Evening)', date: 'Sep 16, 12:01 PM', duration: '9:02', success: '78%', details_en: 'This is a mock call summary for call 5. The call was successful.', details_th: 'นี่คือสรุปการโทรสำหรับสายที่ 5 การโทรสำเร็จ', audioUrl: 'https://example.com/audio/call_5.mp3' },
+                    ];
+                    const t = app.translations[app.currentLang];
+                    return `
+                        <div class="space-y-4">
+                            <h2 class="text-2xl font-bold text-gray-800" data-key="callHistoryTitle">${t.callHistoryTitle}</h2>
+                            <div class="bg-white rounded-xl shadow-md divide-y divide-gray-200">
+                                ${mockCallLogs.map(call => `
+                                    <div class="flex items-center justify-between p-4 cursor-pointer" onclick="app.showCallDetails(${call.id})">
+                                        <div>
+                                            <p class="font-semibold text-gray-800">${call.phone}</p>
+                                            <p class="text-sm text-gray-500">${call.assistant}</p>
+                                            <p class="text-xs text-gray-400">${call.date}</p>
+                                        </div>
+                                        <div class="flex items-center space-x-4">
+                                            <div class="text-right">
+                                                <p class="text-sm font-medium text-gray-600">${call.duration}</p>
+                                                <p class="text-xs text-green-500">${call.success} Success</p>
+                                            </div>
+                                            <button class="w-8 h-8 flex items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M7 6v12h10V6H7zM9 16h6V8H9v8z" /></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                },
+                'todo-actions': () => {
+                    const mockToDo = [
+                        { id: 1, phone: '+12345678901', action_en: 'Customer stated they will arrive in 10 minutes.', action_th: 'ลูกค้าแจ้งว่าจะถึงร้านในอีก 10 นาที' },
+                        { id: 2, phone: '+19876543210', action_en: 'Customer is at the storefront.', action_th: 'ลูกค้าอยู่หน้าร้านแล้ว' },
+                        { id: 3, phone: '+11223344556', action_en: 'Customer confirmed the appointment.', action_th: 'ลูกค้ายืนยันการนัดหมาย' },
+                        { id: 4, phone: '+17788990011', action_en: 'Customer requested to change appointment time.', action_th: 'ลูกค้าขอเปลี่ยนเวลาการนัดหมาย' }
+                    ];
+                    const t = app.translations[app.currentLang];
+                    const actionKey = app.currentLang === 'th' ? 'action_th' : 'action_en';
+                    return `
+                        <div class="space-y-4">
+                            <h2 class="text-2xl font-bold text-gray-800" data-key="todoActionsTitle">${t.todoActionsTitle}</h2>
+                            <div class="bg-white rounded-xl shadow-md divide-y divide-gray-200">
+                                ${mockToDo.map(item => `
+                                    <div id="todo-${item.id}" class="p-4 flex items-center justify-between">
+                                        <div class="flex items-start space-x-3">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                            <div>
+                                                <p class="font-semibold text-gray-800">${item.phone}</p>
+                                                <p class="text-gray-600 mt-1">${item[actionKey]}</p>
+                                            </div>
+                                        </div>
+                                        <button onclick="app.markAsDone(${item.id})" class="text-sm font-semibold text-gray-500 hover:text-green-500 transition-colors">
+                                            Done
+                                        </button>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                },
+                'bookings': () => {
+                    const mockTodayBookings = [
+                        { time: '2:30 PM', name: 'Sarah Johnson', type: 'Consultation' },
+                        { time: '4:00 PM', name: 'John Doe', type: 'Follow-up' },
+                        { time: '5:15 PM', name: 'Jane Smith', type: 'New Patient' },
+                        { time: '7:00 PM', name: 'Michael Brown', type: 'Check-up' }
+                    ];
+                    const t = app.translations[app.currentLang];
+                    return `
+                        <div class="space-y-6">
+                            <!-- Google Calendar Button -->
+                            <a href="https://calendar.google.com/calendar/r" target="_blank" class="w-full flex items-center justify-center p-3 btn-blue space-x-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M21 4H3a2 2 0 00-2 2v14a2 2 0 002 2h18a2 2 0 002-2V6a2 2 0 00-2-2zM3 8V6a.9.9 0 011-.9h2v1.9H3zM21 6v2H8V6h13zM21 10H3v10a.9.9 0 001 .9h17a.9.9 0 001-.9V10zM6 14H4v-2h2v2zm4 0H8v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2z" />
+                                </svg>
+                                <span data-key="openGoogleCalendar">${t.openGoogleCalendar}</span>
+                            </a>
+                            
+                            <!-- Today's Bookings - Vertical Scroll -->
+                            <div>
+                                <h2 class="text-xl font-bold mb-3 text-gray-800" data-key="todaysBookings">${t.todaysBookings}</h2>
+                                <div class="card divide-y divide-gray-200">
+                                    ${mockTodayBookings.map(booking => `
+                                        <div class="flex items-center justify-between p-4">
+                                            <div>
+                                                <p class="font-semibold text-gray-800">${booking.name}</p>
+                                                <p class="text-sm text-gray-500">${booking.time}</p>
+                                            </div>
+                                            <span class="text-sm font-medium text-gray-600">${booking.type}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+
+                            <!-- This Week's Bookings - Horizontal Scroll -->
+                            <div>
+                                <div class="flex items-center justify-between mb-3">
+                                    <h2 class="text-xl font-bold text-gray-800" data-key="thisWeeksBookings">${t.thisWeeksBookings}</h2>
+                                    <div class="flex space-x-2">
+                                        <button onclick="app.changeWeek(-1)" class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 text-gray-600">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+                                        </button>
+                                        <button onclick="app.changeWeek(1)" class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 text-gray-600">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="weekly-bookings-container" class="flex overflow-x-auto space-x-4 scrollable-container p-2 -m-2">
+                                    <!-- Weekly bookings will be rendered here -->
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                },
+                'settings': () => {
+                    const t = app.translations[app.currentLang];
+                    return `
+                        <div class="space-y-6">
+                            <h2 class="text-2xl font-bold text-gray-800" data-key="settings">${t.settings}</h2>
+
+                            <!-- Language Selector -->
+                            <div class="card">
+                                <h3 class="font-semibold text-gray-800 mb-2" data-key="language">${t.language}</h3>
+                                <select onchange="app.setLanguage(this.value)" class="w-full p-2 border border-gray-300 rounded-lg text-sm bg-white">
+                                    <option value="en" ${app.currentLang === 'en' ? 'selected' : ''}>English</option>
+                                    <option value="th" ${app.currentLang === 'th' ? 'selected' : ''}>Thai</option>
+                                </select>
+                            </div>
+
+                            <!-- Google Calendar Integration -->
+                            <div class="card">
+                                <h3 class="font-semibold text-gray-800 mb-2" data-key="gcalIntegration">${t.gcalIntegration}</h3>
+                                <div class="flex items-center justify-between p-4 rounded-xl bg-gray-100 shadow-sm">
+                                    <p class="text-gray-600" data-key="status">${t.status} <span id="gcal-status">${t.notConnected}</span></p>
+                                    <button onclick="app.connectToGoogleCalendar()" id="gcal-connect-btn" class="px-4 py-2 btn-blue text-sm" data-key="connect">${t.connect}</button>
+                                </div>
+                            </div>
+
+                            <!-- Subscription & Auto Top-Up -->
+                            <div class="card">
+                                <h3 class="font-semibold text-gray-800 mb-2" data-key="subscription">${t.subscription}</h3>
+                                <p class="text-sm text-gray-500" data-key="professionalPlan">${t.professionalPlan}</p>
+                                <div class="mt-2 flex items-center">
+                                    <div class="w-full h-2 bg-gray-200 rounded-full">
+                                        <div class="h-full bg-purple-500 rounded-full" style="width: 100%;"></div>
+                                    </div>
+                                    <span class="ml-2 text-sm text-gray-600">300/300 mins</span>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-1">0 <span data-key="remaining">${t.remaining}</span></p>
+                                
+                                <div class="mt-4 pt-4 border-t border-gray-200">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h4 class="font-semibold text-gray-800" data-key="autoTopUp">${t.autoTopUp}</h4>
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" value="" class="sr-only peer">
+                                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                        </label>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label class="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer">
+                                            <div class="flex items-center">
+                                                <input type="radio" name="topup-option" class="form-radio text-blue-600">
+                                                <span class="ml-2 text-gray-800 font-medium">$25</span>
+                                            </div>
+                                            <span class="text-sm text-gray-500">100 minutes</span>
+                                        </label>
+                                        <label class="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer">
+                                            <div class="flex items-center">
+                                                <input type="radio" name="topup-option" class="form-radio text-blue-600">
+                                                <span class="ml-2 text-gray-800 font-medium">$50</span>
+                                            </div>
+                                            <span class="text-sm text-gray-500">200 minutes</span>
+                                        </label>
+                                        <label class="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer">
+                                            <div class="flex items-center">
+                                                <input type="radio" name="topup-option" class="form-radio text-blue-600">
+                                                <span class="ml-2 text-gray-800 font-medium">$100</span>
+                                            </div>
+                                            <span class="text-sm text-gray-500">500 minutes</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Buy More Minutes -->
+                            <div class="card bg-green-50">
+                                <h3 class="font-semibold text-gray-800 mb-2" data-key="needMore">${t.needMore}</h3>
+                                <label class="flex items-center justify-between p-3 rounded-xl bg-white shadow-sm mb-2">
+                                    <div class="flex items-center">
+                                        <input type="radio" name="buy-minutes" class="form-radio text-green-600">
+                                        <span class="ml-2 text-gray-800 font-medium">$25</span>
+                                    </div>
+                                    <span class="text-sm text-gray-500">100 minutes</span>
+                                </label>
+                                <label class="flex items-center justify-between p-3 rounded-xl bg-white shadow-sm mb-2">
+                                    <div class="flex items-center">
+                                        <input type="radio" name="buy-minutes" class="form-radio text-green-600">
+                                        <span class="ml-2 text-gray-800 font-medium">$50</span>
+                                    </div>
+                                    <span class="text-sm text-gray-500">200 minutes</span>
+                                </label>
+                                <label class="flex items-center justify-between p-3 rounded-xl bg-white shadow-sm">
+                                    <div class="flex items-center">
+                                        <input type="radio" name="buy-minutes" class="form-radio text-green-600">
+                                        <span class="ml-2 text-gray-800 font-medium">$100</span>
+                                    </div>
+                                    <span class="text-sm text-gray-500">500 minutes</span>
+                                </label>
+                                <div class="text-sm text-center text-gray-500 mt-2" data-key="oneTimePurchase">${t.oneTimePurchase}</div>
+                                <button class="w-full btn-green mt-4" data-key="buyMoreMinutes">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 inline-block mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                                    ${t.buyMoreMinutes}
+                                </button>
+                            </div>
+
+                            <!-- Stripe Integration -->
+                            <div class="card">
+                                <h3 class="font-semibold text-gray-800 mb-2" data-key="stripeIntegration">${t.stripeIntegration}</h3>
+                                <div class="flex items-center justify-between p-4 rounded-xl bg-gray-100 shadow-sm">
+                                    <p class="text-gray-600" data-key="status">${t.status} <span id="stripe-status" class="text-red-500">${t.notConnected}</span></p>
+                                    <button onclick="app.connectToStripe()" id="stripe-connect-btn" class="px-4 py-2 btn-blue text-sm" data-key="connect">${t.connect}</button>
+                                </div>
+                            </div>
+
+                            <!-- Log Out Button -->
+                            <div class="text-center mt-8">
+                                <button class="px-6 py-2 text-red-600 border border-red-600 rounded-full font-semibold hover:bg-red-50 transition-colors" data-key="logOut">${t.logOut}</button>
+                            </div>
+                        </div>
+                    `;
+                }
+            },
+            
+            init: function() {
+                this.navButtons = document.querySelectorAll('.bottom-nav .nav-button');
+                this.mainContent = document.getElementById('main-content');
+                this.pullToRefreshIndicator = document.getElementById('pull-to-refresh-indicator');
+
+                let startY = 0;
+                let currentY = 0;
+                let isRefreshing = false;
+
+                this.mainContent.addEventListener('touchstart', (e) => {
+                    if (this.mainContent.scrollTop === 0) {
+                        startY = e.touches[0].pageY;
+                    }
+                });
+
+                this.mainContent.addEventListener('touchmove', (e) => {
+                    if (this.mainContent.scrollTop === 0 && e.touches[0].pageY > startY) {
+                        currentY = e.touches[0].pageY;
+                        const pullDistance = currentY - startY;
+                        this.pullToRefreshIndicator.style.height = `${Math.min(pullDistance, 80)}px`;
+                        if (pullDistance > 60) {
+                            this.pullToRefreshIndicator.textContent = this.translations[this.currentLang].releaseToRefresh;
+                        } else {
+                            this.pullToRefreshIndicator.textContent = this.translations[this.currentLang].pullToRefresh;
+                        }
+                    }
+                });
+
+                this.mainContent.addEventListener('touchend', () => {
+                    if (this.mainContent.scrollTop === 0 && currentY - startY > 60 && !isRefreshing) {
+                        isRefreshing = true;
+                        this.pullToRefreshIndicator.style.height = '40px';
+                        this.pullToRefreshIndicator.textContent = this.translations[this.currentLang].refreshing;
+                        
+                        setTimeout(() => {
+                            isRefreshing = false;
+                            this.pullToRefreshIndicator.style.height = '0';
+                            this.renderPage(this.currentPage);
+                        }, 1000);
+                    }
+                    startY = 0;
+                    currentY = 0;
+                    if (!isRefreshing) {
+                         this.pullToRefreshIndicator.style.height = '0';
+                    }
+                });
+
+                this.navButtons.forEach(button => {
+                    button.addEventListener('click', () => this.handleNavClick(button));
+                });
+                
+                this.setLanguage('th');
+            },
+            
+            currentPage: 'overview',
+            
+            mockWeeklyBookings: [
+                [
+                    { day_en: 'Mon, Sep 1', day_th: 'จันทร์, 1 ก.ย.', appointments: 15 },
+                    { day_en: 'Tue, Sep 2', day_th: 'อังคาร, 2 ก.ย.', appointments: 20 },
+                    { day_en: 'Wed, Sep 3', day_th: 'พุธ, 3 ก.ย.', appointments: 18 },
+                    { day_en: 'Thu, Sep 4', day_th: 'พฤหัส, 4 ก.ย.', appointments: 25 },
+                    { day_en: 'Fri, Sep 5', day_th: 'ศุกร์, 5 ก.ย.', appointments: 22 },
+                    { day_en: 'Sat, Sep 6', day_th: 'เสาร์, 6 ก.ย.', appointments: 10 },
+                    { day_en: 'Sun, Sep 7', day_th: 'อาทิตย์, 7 ก.ย.', appointments: 8 }
+                ],
+                [
+                    { day_en: 'Mon, Sep 8', day_th: 'จันทร์, 8 ก.ย.', appointments: 17 },
+                    { day_en: 'Tue, Sep 9', day_th: 'อังคาร, 9 ก.ย.', appointments: 23 },
+                    { day_en: 'Wed, Sep 10', day_th: 'พุธ, 10 ก.ย.', appointments: 21 },
+                    { day_en: 'Thu, Sep 11', day_th: 'พฤหัส, 11 ก.ย.', appointments: 28 },
+                    { day_en: 'Fri, Sep 12', day_th: 'ศุกร์, 12 ก.ย.', appointments: 25 },
+                    { day_en: 'Sat, Sep 13', day_th: 'เสาร์, 13 ก.ย.', appointments: 12 },
+                    { day_en: 'Sun, Sep 14', day_th: 'อาทิตย์, 14 ก.ย.', appointments: 9 }
+                ],
+                [
+                    { day_en: 'Mon, Sep 15', day_th: 'จันทร์, 15 ก.ย.', appointments: 19 },
+                    { day_en: 'Tue, Sep 16', day_th: 'อังคาร, 16 ก.ย.', appointments: 22 },
+                    { day_en: 'Wed, Sep 17', day_th: 'พุธ, 17 ก.ย.', appointments: 23 },
+                    { day_en: 'Thu, Sep 18', day_th: 'พฤหัส, 18 ก.ย.', appointments: 19 },
+                    { day_en: 'Fri, Sep 19', day_th: 'ศุกร์, 19 ก.ย.', appointments: 18 },
+                    { day_en: 'Sat, Sep 20', day_th: 'เสาร์, 20 ก.ย.', appointments: 10 },
+                    { day_en: 'Sun, Sep 21', day_th: 'อาทิตย์, 21 ก.ย.', appointments: 5 },
+                ],
+            ],
+            currentWeekIndex: 2,
+
+            handleNavClick: function(button) {
+                const page = button.dataset.page;
+                this.navButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                this.currentPage = page;
+                this.renderPage(page);
+            },
+            
+            renderPage: function(pageName) {
+                const pageHtml = this.pages[pageName]();
+                this.mainContent.innerHTML = pageHtml;
+                if (pageName === 'bookings') {
+                    this.renderWeeklyBookings();
+                }
+            },
+            
+            renderWeeklyBookings: function() {
+                const container = document.getElementById('weekly-bookings-container');
+                if (!container) return;
+                const weekData = this.mockWeeklyBookings[this.currentWeekIndex];
+                const dayKey = this.currentLang === 'th' ? 'day_th' : 'day_en';
+                const appointmentsKey = this.currentLang === 'th' ? 'นัด' : 'appointments';
+                const html = weekData.map(booking => `
+                    <div class="card flex-shrink-0 w-40 bg-white shadow-sm">
+                        <p class="font-bold text-gray-800">${booking[dayKey]}</p>
+                        <p class="text-sm text-gray-500">${booking.appointments} ${appointmentsKey}</p>
+                    </div>
+                `).join('');
+                container.innerHTML = html;
+            },
+
+            changeWeek: function(direction) {
+                this.currentWeekIndex = (this.currentWeekIndex + direction + this.mockWeeklyBookings.length) % this.mockWeeklyBookings.length;
+                this.renderWeeklyBookings();
+            },
+
+            showCallDetails: function(callId) {
+                const mockCallLogs = [
+                    { id: 1, phone: '+19877306999', assistant: 'Emily (Evening)', date: 'Sep 17, 12:23 PM', duration: '8:45', success: '75%', details_en: 'This is a mock call summary for call 1. The call was successful.', details_th: 'นี่คือสรุปการโทรสำหรับสายที่ 1 การโทรสำเร็จ', audioUrl: 'https://example.com/audio/call_1.mp3' },
+                    { id: 2, phone: '+16827785142', assistant: 'Emily (Evening)', date: 'Sep 16, 11:53 PM', duration: '10:11', success: '68%', details_en: 'This is a mock call summary for call 2. The call was successful.', details_th: 'นี่คือสรุปการโทรสำหรับสายที่ 2 การโทรสำเร็จ', audioUrl: 'https://example.com/audio/call_2.mp3' },
+                    { id: 3, phone: '+12133994980', assistant: 'Sarah (Main)', date: 'Sep 16, 8:01 PM', duration: '8:57', success: '76%', details_en: 'This is a mock call summary for call 3. The call was successful.', details_th: 'นี่คือสรุปการโทรสำหรับสายที่ 3 การโทรสำเร็จ', audioUrl: 'https://example.com/audio/call_3.mp3' },
+                    { id: 4, phone: '+15402581012', assistant: 'Emily (Evening)', date: 'Sep 16, 4:44 PM', duration: '7:46', success: '88%', details_en: 'This is a mock call summary for call 4. The call was successful.', details_th: 'นี่คือสรุปการโทรสำหรับสายที่ 4 การโทรสำเร็จ', audioUrl: 'https://example.com/audio/call_4.mp3' },
+                    { id: 5, phone: '+15113345614', assistant: 'Emily (Evening)', date: 'Sep 16, 12:01 PM', duration: '9:02', success: '78%', details_en: 'This is a mock call summary for call 5. The call was successful.', details_th: 'นี่คือสรุปการโทรสำหรับสายที่ 5 การโทรสำเร็จ', audioUrl: 'https://example.com/audio/call_5.mp3' },
+                ];
+                const call = mockCallLogs.find(c => c.id === callId);
+                const detailsKey = this.currentLang === 'th' ? 'details_th' : 'details_en';
+                const t = this.translations[this.currentLang];
+                
+                const detailsHtml = `
+                    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onclick="app.hideCallDetails()">
+                        <div class="bg-white rounded-lg p-6 w-full max-w-md" onclick="event.stopPropagation();">
+                            <h3 class="text-xl font-bold mb-4" data-key="callDetailsTitle">${t.callDetailsTitle} - ${call.phone}</h3>
+                            <div class="space-y-4 text-gray-700">
+                                <div><p class="font-semibold" data-key="summary">${t.summary}</p><p>${call[detailsKey]}</p></div>
+                                <div><p class="font-semibold" data-key="callRecording">${t.callRecording}</p><audio controls class="w-full mt-2"><source src="${call.audioUrl}" type="audio/mpeg"></audio></div>
+                            </div>
+                            <button onclick="app.hideCallDetails()" class="mt-6 w-full px-4 py-2 bg-gray-200 text-gray-800 rounded-lg" data-key="close">${t.close}</button>
+                        </div>
+                    </div>
+                `;
+                document.body.insertAdjacentHTML('beforeend', detailsHtml);
+            },
+
+            hideCallDetails: function() {
+                const modal = document.querySelector('.fixed.inset-0.bg-black');
+                if (modal) {
+                    modal.remove();
+                }
+            },
+            
+            markAsDone: function(id) {
+                const item = document.getElementById(`todo-${id}`);
+                if (item) {
+                    item.remove();
+                }
+            },
+
+            connectToGoogleCalendar: function() {
+                const gcalStatus = document.getElementById('gcal-status');
+                const gcalConnectButton = document.querySelector('#gcal-connect-btn');
+                const t = app.translations[app.currentLang];
+                
+                gcalStatus.textContent = t.connected;
+                gcalStatus.classList.remove('text-red-500');
+                gcalStatus.classList.add('text-green-500');
+                
+                if (gcalConnectButton) {
+                    gcalConnectButton.disabled = true;
+                    gcalConnectButton.textContent = t.connected;
+                    gcalConnectButton.classList.remove('btn-blue');
+                    gcalConnectButton.classList.add('bg-gray-400', 'cursor-not-allowed');
+                }
+            },
+
+            connectToStripe: function() {
+                const stripeStatus = document.getElementById('stripe-status');
+                const stripeConnectButton = document.querySelector('#stripe-connect-btn');
+                const t = app.translations[app.currentLang];
+                
+                stripeStatus.textContent = t.connected;
+                stripeStatus.classList.remove('text-red-500');
+                stripeStatus.classList.add('text-green-500');
+
+                if (stripeConnectButton) {
+                    stripeConnectButton.disabled = true;
+                    stripeConnectButton.textContent = t.connected;
+                    stripeConnectButton.classList.remove('btn-blue');
+                    stripeConnectButton.classList.add('bg-gray-400', 'cursor-not-allowed');
+                }
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            app.init();
+        });
+    </script>
+</body>
+</html>
